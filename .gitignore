@@ -1,12 +1,8 @@
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
-
-# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -20,90 +16,47 @@ parts/
 sdist/
 var/
 wheels/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
 
-# Virtual environments
-.env
-.venv
-env/
+# Virtual Environments
 venv/
+env/
 ENV/
-env.bak/
-venv.bak/
+.venv
 
-# PyInstaller
-# Usually contains temp files to create executables
-*.manifest
-*.spec
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+# Environment
+.env
 
-# Unit test / coverage reports
+# Cache & Output
+cache/
+output/
+logs/
+*.db
+*.sqlite
+*.sqlite3
+
+# Testing
+.pytest_cache/
+.coverage
 htmlcov/
 .tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
 
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# pipenv
-Pipfile.lock
-
-# poetry
-poetry.lock
-
-# pdm
-__pypackages__/
-
-# pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# PyCharm / JetBrains IDEs
-.idea/
-
-# VS Code
-.vscode/
-
-# Mac / Windows
+# OS
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
-
-# Local data or secrets
-*.env
-.env.local
-secrets.json
-credentials.json
+# Generated Data
+*.csv
+*.json
+*.parquet
+!tests/fixtures/*.csv
+!tests/fixtures/*.json
