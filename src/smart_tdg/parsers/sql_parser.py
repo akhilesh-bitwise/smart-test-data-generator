@@ -7,11 +7,6 @@ from smart_tdg.models.schema_models import (
     UniqueConstraint, TableSchema, DatabaseSchema
 )
 
-print("=" * 60)
-print("PARSER FILE LOADED - NEW VERSION")
-print("=" * 60)
-
-
 class SQLSchemaParser:
     """Parser for SQL DDL statements."""
     
