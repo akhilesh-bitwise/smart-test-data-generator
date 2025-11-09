@@ -2,6 +2,7 @@
 
 import click
 import yaml
+from core.learned_data_generator import LearnedDataGenerator
 from core.scenario_engine import ScenarioEngine
 from models.scenario_models import Scenario
 from core.schema_ingestion import SchemaIngestion
@@ -9,6 +10,7 @@ from core.data_generator import DataGenerator
 from exporters.file_exporters import FileExporter
 from reporter.quality_reporter import QualityReporter
 from pathlib import Path
+import pandas as pd
 
 @click.group()
 def cli():
@@ -45,7 +47,11 @@ def gen_scenario(nl: str, output: str):
 @click.option('--seed', default=42, help='Random seed for generation')
 @click.option('--output_dir', default='./output/generated_data', type=click.Path(),
               help='Output directory for generated data files')
-def gen_data(schema, scenario, seed, output_dir):
+@click.option('--generation_model', default='rule_based', type=click.Choice(['rule_based', 'learned']),
+              help="Choose data generation model")
+@click.option('--output_format', default='csv', type=click.Choice(['csv', 'parquet']),
+              help='Format to export generated data')
+def gen_data(schema, scenario, seed, output_dir, output_format, generation_model):
     """Generate data from schema and scenario YAML."""
     try:
         click.echo(f"Loading schema from: {schema}")
@@ -57,18 +63,37 @@ def gen_data(schema, scenario, seed, output_dir):
         click.echo(f"Loading scenario from: {scenario}")
         with open(scenario) as f:
             scenario_dict = yaml.safe_load(f)
-            print(scenario_dict)
+            # print(scenario_dict)
         scenario_obj = Scenario.from_dict(scenario_dict)
+        print(scenario_obj.tables)
 
-        click.echo("Generating data...")
-        generator = DataGenerator(db_schema, ingestion.fk_graph, seed=seed)
-        data = generator.generate_data(scenario_obj)
-
-        click.echo(f"Generated data: {list(data.keys())}")
+        if generation_model == 'learned':
+            real_data = {}
+            # Infer input data folder location based on schema file location 
+            data_folder = Path(schema).parent / "inputs"
+            for ext in ['*.parquet', '*.csv']:
+                for file_path in data_folder.glob(ext):
+                    if file_path.suffix.lower() == '.parquet':
+                        real_data[file_path.stem] = pd.read_parquet(file_path)
+                    elif file_path.suffix.lower() == '.csv':
+                        real_data[file_path.stem] = pd.read_csv(file_path)
+            generator = LearnedDataGenerator(real_data, ingestion.fk_graph)
+            generator.train_models()
+        else:
+            generator = DataGenerator(db_schema, ingestion.fk_graph, seed=seed)
+        if hasattr(scenario_obj, 'cardinalities'):
+            # Case when 'cardinalities' is a dictionary
+            data = generator.generate_data(scenario_obj.cardinalities)
+        else:
+            table_cardinalities = {table_name: table_scenario.cardinality for table_name, table_scenario in scenario_obj.tables.items()}
+            data = generator.generate_data(table_cardinalities)
 
         # Export to CSV by default
         file_exporter = FileExporter(data)
-        file_exporter.export_csv(output_dir=output_dir)
+        if output_format == 'csv':
+            file_exporter.export_csv(output_dir)
+        elif output_format == 'parquet':
+            file_exporter.export_parquet(output_dir)
         click.echo(f"✓ Data exported as CSV to: {output_dir}")
 
     except Exception as e:
@@ -87,13 +112,17 @@ def gen_data(schema, scenario, seed, output_dir):
 def quality_report(data_dir, schema, scenario, output_dir):
     """Run data quality report on existing data and scenario."""
     try:
-        click.echo("Loading CSV data files...")
+        click.echo("Loading data files...")
         import pandas as pd
         data = {}
-        for csv_file in Path(data_dir).glob('*.csv'):
-            table_name = csv_file.stem
-            df = pd.read_csv(csv_file)
-            data[table_name] = df
+        for file_path in Path(data_dir).glob('*'):
+            if file_path.suffix.lower() in ['.csv', '.parquet']:
+                table_name = file_path.stem
+                if file_path.suffix.lower() == '.csv':
+                    df = pd.read_csv(file_path)
+                else:
+                    df = pd.read_parquet(file_path)
+                data[table_name] = df
         click.echo(f"Loaded tables: {list(data.keys())}")
 
         click.echo(f"Loading schema from: {schema}")
