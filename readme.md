@@ -2,90 +2,133 @@
 
 ## 🚀 Overview
 
-SmartTDG is a synthetic data generator for relational databases. It creates realistic datasets based on schema definitions and human-readable scenarios using both rule-based and learned machine learning methods. Key focuses include data integrity, scenario-driven customization, and extensible CLI operations.
+SmartTDG generates synthetic relational data based on schema definitions and scenario configurations. It supports rule-based and learned synthetic data generation, with FK enforcement and quality validation.
 
 ***
 
-## 🧩 Modules Explained
+## 🧩 Modules & Workflow
 
-### `core.schema_ingestion`
-- Parses SQL schema files.
-- Extracts tables, columns, constraints, and foreign key relationships.
+### 1. Schema Ingestion (`core.schema_ingestion`)
 
-### `models.scenario_models`
-- Defines `Scenario`, `TableScenario`, and related data classes.
-- Provides `from_dict()` for parsing YAML scenario files into typed objects.
+- Parses SQL DDL schema file.
+- Builds schema metadata including tables, columns, and foreign key graphs.
+- Fixes constraints like CHECK clauses automatically.
+- **Caching:** Uses caching to avoid reparsing schemas repeatedly, improving CLI performance.
 
-### `core.scenario_engine`
-- Generates scenario definitions from natural language.
+### 2. Scenario Modeling (`models.scenario_models`)
 
-### `core.data_generator`
-- Rule-based synthetic data generator complying with scenario constraints.
+- Defines data classes (`Scenario`, `TableScenario`, `CorrelationConfig`, etc.) to structure scenario details.
+- Includes `from_dict()` for converting YAML to typed scenario objects.
+- Supports plural/singular keys flexibly to align with YAML changes.
 
-### `core.learned_data_generator`
-- Trains generative models (CTGAN) on real data (CSV/Parquet).
-- Samples synthetic data respecting learned distributions and correlations.
-- Enforces foreign keys post-generation for consistency.
+### 3. Scenario Engine (`core.scenario_engine`)
 
-### `core.fk_utils`
-- Utilities to enforce foreign key constraints in generated datasets.
+- Converts natural language input to scenario YAML definitions.
+- Provides initial human-friendly interface for scenario creation.
 
-### `exporters.file_exporters`
-- Exports synthetic or real data in CSV or Parquet formats.
-- Exports quality reports.
+### 4. Data Generation Engines
 
-### `reporter.quality_reporter`
-- Validates data against scenario expectations.
-- Outputs detailed quality summaries.
+- **Rule-Based Generator (`core.data_generator`)**  
+  Generates synthetic data using distribution rules, cardinalities, and constraints defined in scenario and schema.
+  
+- **Learned Generator (`core.learned_data_generator`)**  
+  Trains generative models (CTGAN) on real input data (CSV/Parquet)  
+  Generates synthetic data preserving learned correlations.  
+  Applies FK enforcement post-generation.
 
-### `cli.cli_main`
-- Command-line interface with commands to generate scenarios, generate data (rule-based or learned), and run quality reports.
+### 5. Foreign Key Enforcement (`core.fk_utils`)
+
+- Adjusts synthetic data to ensure foreign key relationships remain consistent across tables.
+
+### 6. Exporters (`exporters.file_exporters`)
+
+- Exports generated or existing data to CSV or Parquet.
+- Exports detailed quality and validation reports.
+
+### 7. Quality Reporter (`reporter.quality_reporter`)
+
+- Validates generated/existing datasets against scenario constraints and schema rules.
+- Produces report summaries and detailed findings.
+
+### 8. CLI (`cli.cli_main`)
+
+- Commands:
+  - `gen_scenario`: Generate scenario YAML from natural language.
+  - `gen_data`: Generate synthetic data using rule-based or learned models.
+  - `quality_report`: Validate data quality and scenario compliance.
+
+- **CLI Caching:** Uses caching for schema and scenario parsing, speeding repeated runs.
 
 ***
 
-## 🛠️ CLI Usage
+## ⚙️ CLI Usage & Options
 
-### 1. Generate Scenario from Natural Language
+### 1. `gen_scenario`  
+Generate scenario YAML from natural language:
 
-```bash
-python -m cli.cli_main gen_scenario --nl "Describe your scenario here" --output ./scenarios/my_scenario.yaml
+```
+python -m cli.cli_main gen_scenario \
+  --nl "Describe retail sales scenario" \
+  --output ./scenarios/my_scenario.yaml
 ```
 
-### 2. Generate Synthetic Data
-
-```bash
-python -m cli.cli_main gen_data --schema path/to/schema.sql --scenario path/to/scenario.yaml --output_dir path/to/output --generation_model [rule_based|learned] --output_format [csv|parquet]
-```
-
-- `--schema` : Path to your DB schema in SQL.
-- `--scenario` : Path to scenario YAML file.
-- `--seed` : (Optional) Random seed, default 42.
-- `--output_dir` : Directory to save generated datasets.
-- `--generation_model` :
-  - `rule_based` – uses predefined rules and distributions.
-  - `learned` – trains and generates data using learned models on input CSV/Parquet data located next to your schema file.
-- `--output_format` : `csv` or `parquet`.
-
-### 3. Run Quality Report
-
-```bash
-python -m cli.cli_main quality_report --data_dir path/to/data --schema path/to/schema.sql --scenario path/to/scenario.yaml --output_dir path/to/report
-```
-
-- `--data_dir` : Directory containing data files (CSV or Parquet) for validation.
-- `--schema` : Schema SQL file.
-- `--scenario` : Scenario YAML file.
-- `--output_dir` : Directory to save generated quality reports.
+- `--nl`: Natural language description of scenario (prompted if missing)
+- `--output`: Path to save generated scenario YAML (default: `./scenarios/generated_scenario.yaml`)
 
 ***
 
-## 📋 Notes
+### 2. `gen_data`  
+Generate synthetic data:
 
-- The CLI will infer input data files (CSV/Parquet) automatically for learned models by looking in a folder named `inputs` next to your schema SQL file.
-- Scenario YAML keys like `entities`, `distribution`, `correlation`, and `temporal_pattern` are parsed into structured model classes with `from_dict()`.
-- Foreign key constraints are enforced after synthetic data generation, ensuring referential integrity.
-- Quality reports validate generated or existing data against scenario and schema constraints.
+```
+python -m cli.cli_main gen_data \
+  --schema path/to/schema.sql \
+  --scenario path/to/scenario.yaml \
+  --output_dir path/to/output \
+  --generation_model [rule_based|learned] \
+  --output_format [csv|parquet] \
+  [--seed 42]
+```
+
+- `--schema`: SQL DDL schema filepath.
+- `--scenario`: Scenario YAML filepath.
+- `--output_dir`: Directory to export generated data.
+- `--generation_model`:  
+  - `rule_based`: Use hand-coded rules for data generation.  
+  - `learned`: Train models on example data (CSV/Parquet in `inputs` folder) and sample synthetic data.
+- `--output_format`: Output format `"csv"` (default) or `"parquet"`.
+- `--seed`: (Optional) Random seed for reproducibility (default: 42).
 
 ***
 
-# Enjoy generating high-quality synthetic data with SmartTDG! 🎉
+### 3. `quality_report`  
+Run validation on existing data:
+
+```
+python -m cli.cli_main quality_report \
+  --data_dir path/to/data \
+  --schema path/to/schema.sql \
+  --scenario path/to/scenario.yaml \
+  --output_dir path/to/report
+```
+
+- `--data_dir`: Directory containing CSV/Parquet data files.
+- `--schema`: Schema SQL filepath.
+- `--scenario`: Scenario YAML filepath.
+- `--output_dir`: Destination for saving quality reports.
+
+***
+
+## 🔄 Workflow Summary
+
+1. **Schema parsing & caching:** Schema is parsed once and cached for reuse.
+2. **Scenario creation:** From YAML or natural language, parsed into typed `Scenario` objects.
+3. **Model selection:** Choose between rule-based or learned data generator.
+4. **Data generation:** Synthetic data created per table cardinalities and constraints.
+5. **Foreign key integrity:** FK relationships enforced across generated tables.
+6. **Data export:** Generated datasets exported in chosen formats.
+7. **Quality check:** Validate datasets against scenario and schema rules with summary reports.
+
+***
+
+## 🎉 Start generating and validating synthetic data efficiently with SmartTDG!
