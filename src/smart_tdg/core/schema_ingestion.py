@@ -2,10 +2,10 @@
 
 from typing import Dict, Optional, List
 from pathlib import Path
-from smart_tdg.models.schema_models import DatabaseSchema, ForeignKey
-from smart_tdg.parsers.sql_parser import SQLSchemaParser
-from smart_tdg.parsers.openapi_parser import OpenAPISchemaParser
-from smart_tdg.utils.graph_utils import DependencyGraph
+from models.schema_models import DatabaseSchema, ForeignKey
+from parsers.sql_parser import SQLSchemaParser
+from parsers.openapi_parser import OpenAPISchemaParser
+from utils.graph_utils import DependencyGraph
 
 
 class SchemaIngestion:
@@ -60,7 +60,7 @@ class SchemaIngestion:
         schema = parquet_file.schema_arrow
         
         # Convert to our schema format
-        from smart_tdg.models.schema_models import TableSchema, Column
+        from models.schema_models import TableSchema, Column
         
         table_name = Path(file_path).stem
         columns = []

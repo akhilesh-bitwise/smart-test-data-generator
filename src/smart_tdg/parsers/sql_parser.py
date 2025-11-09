@@ -2,7 +2,7 @@
 
 from typing import Dict, List, Optional
 from simple_ddl_parser import DDLParser
-from smart_tdg.models.schema_models import (
+from models.schema_models import (
     Column, PrimaryKey, ForeignKey, CheckConstraint,
     UniqueConstraint, TableSchema, DatabaseSchema
 )

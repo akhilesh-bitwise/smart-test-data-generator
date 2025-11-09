@@ -2,10 +2,10 @@
 
 from typing import Dict, Optional
 import pandas as pd
-from smart_tdg.models.schema_models import DatabaseSchema
-from smart_tdg.models.scenario_models import Scenario
-from smart_tdg.generators.rule_based import RuleBasedGenerator
-from smart_tdg.utils.graph_utils import DependencyGraph
+from models.schema_models import DatabaseSchema
+from models.scenario_models import Scenario
+from generators.rule_based import RuleBasedGenerator
+from utils.graph_utils import DependencyGraph
 
 
 class DataGenerator:

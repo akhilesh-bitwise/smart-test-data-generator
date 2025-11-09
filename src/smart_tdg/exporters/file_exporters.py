@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Dict
 import pandas as pd
-from smart_tdg.utils.config import Config
+from utils.config import Config
 
 
 class FileExporter:
@@ -113,3 +113,13 @@ class FileExporter:
                 print(f"✓ Exported {table_name} to {filepath}")
         elif format == 'parquet':
             self.export_parquet(output_dir)
+
+    def export_quality_report(self, quality_reporter, output_dir: str = None):
+        """Export quality report JSON and HTML."""
+        output_dir = Path(output_dir or "./output/")
+        output_dir.mkdir(parents=True, exist_ok=True)
+        json_path = output_dir / "quality_report.json"
+        html_path = output_dir / "quality_report.html"
+        quality_reporter.to_json(str(json_path))
+        quality_reporter.to_html(str(html_path))
+

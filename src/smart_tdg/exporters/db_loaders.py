@@ -3,7 +3,7 @@
 from typing import Dict, Optional
 import pandas as pd
 from sqlalchemy import create_engine
-from smart_tdg.utils.config import Config
+from utils.config import Config
 
 
 class DatabaseLoader:

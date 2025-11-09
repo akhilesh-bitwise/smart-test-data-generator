@@ -4,7 +4,7 @@ from typing import Dict, List, Any, Union
 import pandas as pd
 import numpy as np
 from faker import Faker
-from smart_tdg.models.schema_models import DatabaseSchema, TableSchema, Column
+from models.schema_models import DatabaseSchema, TableSchema, Column
 
 
 class RuleBasedGenerator:

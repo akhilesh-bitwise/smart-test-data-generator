@@ -8,6 +8,8 @@ build/
 develop-eggs/
 dist/
 downloads/
+examples/
+scenarios/
 eggs/
 .eggs/
 lib/

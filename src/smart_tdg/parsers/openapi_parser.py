@@ -3,7 +3,7 @@
 import json
 from typing import Dict, Any
 from pathlib import Path
-from smart_tdg.models.schema_models import (
+from models.schema_models import (
     Column, TableSchema, DatabaseSchema
 )
 
